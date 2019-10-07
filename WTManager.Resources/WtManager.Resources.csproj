@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8E6C262C-AB2C-4B32-B761-1CAFB8DC4E93}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>WTManager.Resources</RootNamespace>
+    <AssemblyName>WTManager.Resources</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="INIFileParser, Version=2.5.2.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
+      <HintPath>..\packages\ini-parser.2.5.2\lib\net20\INIFileParser.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="LocalizationManager.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResourcesHelper.cs" />
+    <Compile Include="ResourcesProcessor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\dialog\add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\tray.ico" />
+    <EmbeddedResource Include="Images\dialog\remove.png" />
+    <EmbeddedResource Include="Images\dialog\ok.png" />
+    <EmbeddedResource Include="Images\dialog\edit.png" />
+    <EmbeddedResource Include="Images\dialog\cancel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\dialog\down.png" />
+    <EmbeddedResource Include="Images\dialog\up.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-config.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-edit-config.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-show-log.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-open-browser.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-open-data-directory.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-restart.png" />
+    <EmbeddedResource Include="Images\menu\service-start.png" />
+    <EmbeddedResource Include="Images\menu\service-stop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-status-pending.png" />
+    <EmbeddedResource Include="Images\menu\service-status-started.png" />
+    <EmbeddedResource Include="Images\menu\service-status-stopped.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\settings-manager.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\app-exit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-group.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\services-scheduler.png" />
+    <EmbeddedResource Include="Images\menu\system-services-manager.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\dialog\apply.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Locales\english.ini" />
+    <None Include="packages.config" />
+    <EmbeddedResource Include="Locales\russian.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\menu\service-status-na.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
