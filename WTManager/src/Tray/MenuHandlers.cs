@@ -72,6 +72,8 @@ namespace WtManager.Tray
         {
             get
             {
+                if (this.Service.Controller == null)
+                    return "service-status-na";
                 if (this.Service.Controller.Status == ServiceControllerStatus.Running)
                     return "service-status-started";
                 if (this.Service.Controller.Status == ServiceControllerStatus.Stopped)
@@ -206,7 +208,7 @@ namespace WtManager.Tray
         protected override string ImageKey => "service-restart";
 
         protected override bool IsVisible 
-            => this.Service.Controller.Status == ServiceControllerStatus.Running;
+            => this.Service.Controller?.Status == ServiceControllerStatus.Running;
 
         protected override async void Action()
         {
@@ -225,7 +227,7 @@ namespace WtManager.Tray
         protected override string ImageKey => "service-start";
 
         protected override bool IsVisible 
-            => this.Service.Controller.Status == ServiceControllerStatus.Stopped;
+            => this.Service.Controller?.Status == ServiceControllerStatus.Stopped;
 
         protected override async void Action()
         {
@@ -244,7 +246,7 @@ namespace WtManager.Tray
         protected override string ImageKey => "service-stop";
 
         protected override bool IsVisible 
-            => this.Service.Controller.Status == ServiceControllerStatus.Running;
+            => this.Service.Controller != null && this.Service.Controller.Status == ServiceControllerStatus.Running;
 
         protected override async void Action()
         {

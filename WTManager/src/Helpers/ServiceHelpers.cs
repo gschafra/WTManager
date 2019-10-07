@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 using System.ServiceProcess;
 using WtManager.Config;
 
@@ -7,7 +8,7 @@ namespace WtManager.Helpers
 {
     public static class ServiceHelpers
     {
-        public static IEnumerable<ServiceController> GetAllServices() 
+        public static IEnumerable<ServiceController> GetAllServices()
             => ServiceController.GetServices();
 
         private static readonly Dictionary<string, ServiceController> ControllerCache =
@@ -17,6 +18,11 @@ namespace WtManager.Helpers
         {
             try
             {
+                if (!DoesServiceExist(serviceName))
+                {
+                    return null;
+                }
+
                 if (!ControllerCache.ContainsKey(serviceName))
                     ControllerCache[serviceName] = new ServiceController(serviceName);
 
@@ -92,7 +98,7 @@ namespace WtManager.Helpers
 
         public static bool IsInPendingState(this ServiceController controller)
         {
-            switch (controller.Status)
+            switch (controller?.Status)
             {
                 case ServiceControllerStatus.StopPending:
                 case ServiceControllerStatus.ContinuePending:
@@ -102,6 +108,26 @@ namespace WtManager.Helpers
                 default:
                     return false;
             }
+        }
+
+        public static bool IsEnabled(this ServiceController controller)
+        {
+            return !IsInPendingState(controller) && GetStartupType(controller.ServiceName) != "Disabled";
+        }
+
+        public static bool DoesServiceExist(string serviceName)
+        {
+            return GetAllServices().FirstOrDefault(s => s.ServiceName == serviceName) != null;
+        }
+
+        public static string GetStartupType(string serviceName)
+        {
+            //construct the management path
+            string path = "Win32_Service.Name='" + serviceName + "'";
+            ManagementPath p = new ManagementPath(path);
+            //construct the management object
+            ManagementObject ManagementObj = new ManagementObject(p);
+            return ManagementObj["StartMode"].ToString();
         }
     }
 }

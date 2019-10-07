@@ -103,6 +103,8 @@
     <None Include="packages.config" />
     <EmbeddedResource Include="Locales\russian.ini" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Images\menu\service-status-na.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
