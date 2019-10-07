@@ -104,7 +104,7 @@
     <EmbeddedResource Include="Locales\russian.ini" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Images\menu\service-status-na.png" />
+    <EmbeddedResource Include="Images\menu\service-status-na.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
