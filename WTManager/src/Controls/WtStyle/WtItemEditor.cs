@@ -21,7 +21,7 @@ namespace WtManager.Controls.WtStyle
         private int _verticalPaddingBetweenButtons = 5;
         private int _buttonSize = 30;
 
-        #endregion
+        #endregion Private fields
 
         #region Designer properties
 
@@ -44,7 +44,7 @@ namespace WtManager.Controls.WtStyle
             get { return this._buttonSize; }
             set
             {
-                this._buttonSize = value; 
+                this._buttonSize = value;
                 this.UpdateInterface();
             }
         }
@@ -60,7 +60,7 @@ namespace WtManager.Controls.WtStyle
             get { return this._showAddButton; }
             set
             {
-                this._showAddButton = value; 
+                this._showAddButton = value;
                 this.UpdateInterface();
             }
         }
@@ -127,20 +127,20 @@ namespace WtManager.Controls.WtStyle
         [DisplayName("RemoveItemOnDeleteKeyPress")]
         public bool RemoveItemOnDeleteKeyPress { get; set; } = true;
 
-        #endregion
+        #endregion Designer properties
 
         #region Add/edit functions
 
         public Func<object> AddRequest = null;
         public Func<object, object> EditRequest = null;
 
-        #endregion
+        #endregion Add/edit functions
 
         #region Constructors
 
         public WtItemEditor() => this.InitializeComponent();
 
-        #endregion
+        #endregion Constructors
 
         #region Form control event handlers
 
@@ -150,31 +150,35 @@ namespace WtManager.Controls.WtStyle
         private void EditItemButton_OnClick(object sender, EventArgs eventArgs)
             => this.EditSelectedItem();
 
-        private void RemoveItemButton_OnClick(object sender, EventArgs eventArgs) 
+        private void RemoveItemButton_OnClick(object sender, EventArgs eventArgs)
             => this.RemoveSelectedItems();
 
-        private void DownItemButton_OnClick(object sender, EventArgs eventArgs) 
+        private void DownItemButton_OnClick(object sender, EventArgs eventArgs)
             => this.MoveSelectedItem(1);
 
-        private void UpItemButton_OnClick(object sender, EventArgs eventArgs) 
+        private void UpItemButton_OnClick(object sender, EventArgs eventArgs)
             => this.MoveSelectedItem(-1);
 
-        private void ItemsListBox_OnSelectedIndexChanged(object sender, EventArgs eventArgs) 
+        private void ItemsListBox_OnSelectedIndexChanged(object sender, EventArgs eventArgs)
             => this.UpdateButtonEnability();
 
         private void ItemsListBox_OnMouseDoubleClick(object sender, MouseEventArgs mouseEventArgs)
         {
             if (this.EditOnDoubleClick)
+            {
                 this.EditSelectedItem();
+            }
         }
 
         private void ItemsListBox_OnKeyUp(object sender, KeyEventArgs keyEventArgs)
         {
             if (this.RemoveItemOnDeleteKeyPress && keyEventArgs.KeyCode == Keys.Delete)
+            {
                 this.RemoveSelectedItems();
+            }
         }
 
-        #endregion
+        #endregion Form control event handlers
 
         #region Get/set items logic
 
@@ -189,7 +193,7 @@ namespace WtManager.Controls.WtStyle
             this.UpdateButtonEnability();
         }
 
-        #endregion
+        #endregion Get/set items logic
 
         #region Interface update logic
 
@@ -214,7 +218,9 @@ namespace WtManager.Controls.WtStyle
             btn.Size = new Size(this.ButtonSize, this.ButtonSize);
 
             if (!isVisible)
+            {
                 return;
+            }
 
             int btnLeftCoord = this.Width - btn.Width;
             btn.Location = new Point(btnLeftCoord, topCoord);
@@ -226,7 +232,9 @@ namespace WtManager.Controls.WtStyle
             btn.Visible = isVisible;
             btn.Size = new Size(this.ButtonSize, this.ButtonSize);
             if (!isVisible)
+            {
                 return;
+            }
 
             int btnLeftCoord = this.Width - btn.Width;
             int btnTopCoord = bottomCoord - btn.Height;
@@ -255,7 +263,7 @@ namespace WtManager.Controls.WtStyle
             this.DownItemButton.Enabled = IsOneItemSelected() && !IsLastIndexSelected();
         }
 
-        #endregion
+        #endregion Interface update logic
 
         #region Base form override
 
@@ -271,7 +279,7 @@ namespace WtManager.Controls.WtStyle
             this.UpdateButtonEnability();
         }
 
-        #endregion
+        #endregion Base form override
 
         #region Add/edit/remove/up/down logic
 
@@ -279,7 +287,9 @@ namespace WtManager.Controls.WtStyle
         {
             var newItem = this.AddRequest?.Invoke();
             if (newItem != null)
+            {
                 this.ItemsListBox.Items.Add(newItem);
+            }
         }
 
         private void EditSelectedItem()
@@ -287,43 +297,57 @@ namespace WtManager.Controls.WtStyle
             int index = this.ItemsListBox.SelectedIndex;
 
             if (index == -1)
+            {
                 return;
+            }
 
             var item = this.EditRequest?.Invoke(this.ItemsListBox.SelectedItem);
             if (item != null)
+            {
                 this.ItemsListBox.Items[index] = item;
+            }
         }
 
         private void RemoveSelectedItems()
         {
             if (this.ItemsListBox.SelectedItems.Count == 0)
+            {
                 return;
+            }
 
             if (this.UseRemoveConfirmation)
             {
-                string text = String.IsNullOrEmpty(this.RemoveConfirmationText) 
+                string text = String.IsNullOrEmpty(this.RemoveConfirmationText)
                     ? "Do you really want to delete selected item(s)?"
                     : this.RemoveConfirmationText;
 
                 string title = "Remove item confirmation";
 
                 if (MessageBox.Show(this, text, title, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+                {
                     return;
+                }
             }
 
             var selectedItems = this.ItemsListBox.SelectedItems.OfType<object>().ToList();
             foreach (var service in selectedItems)
+            {
                 this.ItemsListBox.Items.Remove(service);
+            }
         }
 
         private void MoveSelectedItem(int direction)
         {
             if (this.ItemsListBox.SelectedItem == null || this.ItemsListBox.SelectedIndex < 0)
+            {
                 return;
-            
+            }
+
             int newIndex = this.ItemsListBox.SelectedIndex + direction;
             if (newIndex < 0 || newIndex >= this.ItemsListBox.Items.Count)
+            {
                 return;
+            }
 
             var selected = this.ItemsListBox.SelectedItem;
 
@@ -332,7 +356,7 @@ namespace WtManager.Controls.WtStyle
             this.ItemsListBox.SetSelected(newIndex, true);
         }
 
-        #endregion
+        #endregion Add/edit/remove/up/down logic
 
         #region Themes support
 
@@ -346,6 +370,6 @@ namespace WtManager.Controls.WtStyle
             this.DownItemButton.Image = ResourcesProcessor.GetImage("dialog.down");
         }
 
-        #endregion
+        #endregion Themes support
     }
 }

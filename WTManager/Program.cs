@@ -20,15 +20,21 @@ namespace WtManager
                     case "/installtask":
                         SchedulerHelpers.AutoStartTaskState = true;
                         break;
+
                     case "/removetask":
                         SchedulerHelpers.AutoStartTaskState = false;
                         break;
+
+                    default:
+                        throw new InvalidOperationException("Invalid  command line argument " + args[0]);
                 }
                 Environment.Exit(0);
             }
 
             if (!AppMutex.WaitOne(TimeSpan.Zero, true))
+            {
                 return;
+            }
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
