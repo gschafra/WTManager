@@ -1,15 +1,14 @@
 using System;
 using System.Windows.Forms;
-using WTManager.Controls.WtStyle;
-using WTManager.Controls.WtStyle.WtConfigurator;
-using WTManager.Lib;
+using WtManager.Controls.WtStyle;
+using WtManager.Controls.WtStyle.WtConfigurator;
 
-namespace WTManager.VisualItemRenderers
+namespace WtManager.VisualItemRenderers
 {
     public class VisualCheckboxRenderer : VisualItemRenderer, IDependentStateProvider
     {
-        public VisualCheckboxRenderer(IVisualProviderObject provider) 
-            : base(provider) { }
+        public VisualCheckboxRenderer(IVisualSourceObject source) 
+            : base(source) { }
 
         protected override Control CreateControl()
         {
@@ -20,10 +19,8 @@ namespace WTManager.VisualItemRenderers
 
         public override void SetValue(object value)
         {
-            if (!(value is bool))
-                return;
-
-            ((WtCheckBox)this.Control).Checked = (bool)value;
+            if (value is bool boolValue)
+                ((WtCheckBox)this.Control).Checked = boolValue;
         }
 
         public override object GetValue()

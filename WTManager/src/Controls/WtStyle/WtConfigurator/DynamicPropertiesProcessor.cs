@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace WTManager.Controls.WtStyle.WtConfigurator
+namespace WtManager.Controls.WtStyle.WtConfigurator
 {
     public class DynamicPropertiesProcessor
     {
-        private readonly IVisualProviderObject _dataObject;
+        private readonly IVisualSourceObject _dataObject;
 
         private PropertyInfo[] Properties => this._dataObject.GetType().GetProperties();
 
-        public DynamicPropertiesProcessor(IVisualProviderObject dataObject)
+        public DynamicPropertiesProcessor(IVisualSourceObject dataObject)
         {
             this._dataObject = dataObject;
         }
@@ -24,7 +24,7 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
         private bool IsVisualRendererProperty(PropertyInfo prop)
             => prop.GetCustomAttribute<VisualItemAttribute>() != null;
 
-        private string GetGroupName(PropertyInfo prop) 
+        private string GetGroupName(PropertyInfo prop)
             => prop.GetCustomAttribute<VisualItemAttribute>()?.GroupTitle ?? String.Empty;
 
         public List<PropertyInfo> GetGroupProperties(string groupName)
@@ -34,19 +34,39 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
             foreach (var prop in this.Properties)
             {
                 if (this.IsVisualRendererProperty(prop) && this.GetGroupName(prop) == groupName)
+                {
                     propertiesList.Add(prop);
+                }
             }
             return propertiesList;
         }
 
-        public IEnumerable<string> FindDependentControls(string dependencyName)
+        public IEnumerable<DependentInfo> FindDependentControls(string dependencyName)
         {
             foreach (var propertyInfo in this.Properties)
             {
                 var dependentOn = propertyInfo.GetCustomAttributes<VisualItemDependentOnAttribute>().ToList();
-                if (dependentOn.Select(d => d.DependentProperty).Contains(dependencyName))
-                    yield return propertyInfo.Name;
+                var depOn = dependentOn.FirstOrDefault(d => d.DependentProperty == dependencyName);
+                if (depOn != null)
+                {
+                    yield return new DependentInfo(propertyInfo.Name, depOn.ReverseDependent);
+                }
             }
+        }
+    }
+
+    public class DependentInfo
+    {
+        private string propertyName;
+        private bool isReversed;
+
+        public string PropertyName { get => propertyName; set => propertyName = value; }
+        public bool IsReversed { get => isReversed; set => isReversed = value; }
+
+        public DependentInfo(string propertyName, bool isReversed)
+        {
+            this.propertyName = propertyName;
+            this.isReversed = isReversed;
         }
     }
 }

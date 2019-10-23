@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Windows.Forms;
-using WTManager.Forms;
-using WTManager.Helpers;
+using WtManager.Forms;
+using WtManager.Helpers;
 
-namespace WTManager
+namespace WtManager
 {
     internal static class Program
     {
@@ -20,15 +20,21 @@ namespace WTManager
                     case "/installtask":
                         SchedulerHelpers.AutoStartTaskState = true;
                         break;
+
                     case "/removetask":
                         SchedulerHelpers.AutoStartTaskState = false;
                         break;
+
+                    default:
+                        throw new InvalidOperationException("Invalid  command line argument " + args[0]);
                 }
                 Environment.Exit(0);
             }
 
             if (!AppMutex.WaitOne(TimeSpan.Zero, true))
+            {
                 return;
+            }
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

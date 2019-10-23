@@ -3,13 +3,16 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.ServiceProcess;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WTManager.Config;
-using WTManager.Forms;
-using WTManager.Helpers;
+using WtManager.Config;
+using WtManager.Controls.WtStyle;
+using WtManager.Forms;
+using WtManager.Helpers;
+using WtManager.Resources;
 
-namespace WTManager.Tray
+namespace WtManager.Tray
 {
     #region Base abstract specialized menu items
 
@@ -49,7 +52,7 @@ namespace WTManager.Tray
         }
     }
 
-    #endregion
+    #endregion Base abstract specialized menu items
 
     #region Service related menu items
 
@@ -63,18 +66,31 @@ namespace WTManager.Tray
 
         protected override string DisplayText => this.Service.DisplayName;
 
-        protected override bool IsEnabled => !this.Service.IsInPendingState();
+        protected override bool IsEnabled => !this.Service.Controller.IsInPendingState();
 
         protected override string ImageKey
         {
             get
             {
-                if (this.Service.IsStarted())
+                if (this.Service.Controller == null)
+                {
+                    return "service-status-na";
+                }
+
+                if (this.Service.Controller.Status == ServiceControllerStatus.Running)
+                {
                     return "service-status-started";
-                if (this.Service.IsStopped())
+                }
+
+                if (this.Service.Controller.Status == ServiceControllerStatus.Stopped)
+                {
                     return "service-status-stopped";
-                if (this.Service.IsInPendingState())
+                }
+
+                if (this.Service.Controller.IsInPendingState())
+                {
                     return "service-status-pending";
+                }
 
                 return base.ImageKey;
             }
@@ -86,10 +102,10 @@ namespace WTManager.Tray
     /// </summary>
     public class ServiceConfigMenuItem : FileOperationMenuItem
     {
-        public ServiceConfigMenuItem(ITrayController controller, string fileName) 
+        public ServiceConfigMenuItem(ITrayController controller, string fileName)
             : base(controller, fileName) { }
 
-        protected override string DisplayText 
+        protected override string DisplayText
             => $"Edit {Path.GetFileName(this.FileName)}";
 
         protected override string ImageKey => "service-edit-config";
@@ -99,8 +115,8 @@ namespace WTManager.Tray
             bool isValidEditor = File.Exists(ConfigManager.Instance.Config.ConfigEditorPath);
 
             // if config editor wasn't set we will just use default notepad application
-            string editorPath = !isValidEditor 
-                ? "notepad.exe" 
+            string editorPath = !isValidEditor
+                ? "notepad.exe"
                 : ConfigManager.Instance.Config.ConfigEditorPath;
 
             Process.Start(editorPath, this.FileName);
@@ -112,10 +128,10 @@ namespace WTManager.Tray
     /// </summary>
     public class ServiceDirectoryMenuItem : ServiceMenuItem
     {
-        public ServiceDirectoryMenuItem(ITrayController controller, Service service) 
+        public ServiceDirectoryMenuItem(ITrayController controller, Service service)
             : base(controller, service) { }
 
-        protected override string DisplayText => "Open data directory…";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceOpenDataDirectory");
 
         protected override string ImageKey => "service-open-data-directory";
 
@@ -132,10 +148,10 @@ namespace WTManager.Tray
     /// </summary>
     public class ServiceBrowserMenuItem : ServiceMenuItem
     {
-        public ServiceBrowserMenuItem(ITrayController controller, Service service) 
+        public ServiceBrowserMenuItem(ITrayController controller, Service service)
             : base(controller, service) { }
 
-        protected override string DisplayText => "Open in browser…";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceOpenInBrower");
 
         protected override string ImageKey => "service-open-browser";
 
@@ -152,10 +168,10 @@ namespace WTManager.Tray
     /// </summary>
     public class ServiceLogMenuItem : FileOperationMenuItem
     {
-        public ServiceLogMenuItem(ITrayController controller, string fileName) 
+        public ServiceLogMenuItem(ITrayController controller, string fileName)
             : base(controller, fileName) { }
 
-        protected override string DisplayText 
+        protected override string DisplayText
             => $"Show {Path.GetFileName(this.FileName)}";
 
         protected override string ImageKey => "service-show-log";
@@ -171,9 +187,13 @@ namespace WTManager.Tray
             }
 
             if (File.Exists(viewer))
+            {
                 Process.Start(viewer, this.FileName);
+            }
             else
+            {
                 MessageBox.Show($"Can't use selected log viewer ({viewer}), check your configuration");
+            }
         }
     }
 
@@ -182,72 +202,75 @@ namespace WTManager.Tray
         public ServiceEditMenuItem(ITrayController controller, Service service)
             : base(controller, service) { }
 
-        protected override string DisplayText { get; } = "Edit configuration";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceEditConfiguration");
 
         protected override string ImageKey => "service-config";
 
         protected override void Action()
         {
-            if (AddEditServiceForm.EditItem(this.Service) != null)
-                ConfigManager.Instance.SaveConfig();
+            //if (AddEditServiceForm.EditItem(this.Service) != null)
+            //    ConfigManager.Instance.SaveConfig();
         }
     }
 
     public class ServiceRestartMenuItem : ServiceMenuItem
     {
-        public ServiceRestartMenuItem(ITrayController controller, Service service) 
+        public ServiceRestartMenuItem(ITrayController controller, Service service)
             : base(controller, service) { }
 
-        protected override string DisplayText => "Restart service";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceRestart");
 
         protected override string ImageKey => "service-restart";
 
-        protected override bool IsVisible => this.Service.IsStarted();
+        protected override bool IsVisible
+            => this.Service.Controller?.Status == ServiceControllerStatus.Running;
 
         protected override async void Action()
         {
-            await Task.Factory.StartNew(this.Service.RestartService);
+            await Task.Factory.StartNew(this.Service.Controller.RestartService);
             this.Controller.ShowBaloon("Started", $"Service {this.Service.DisplayName} was restarted", ToolTipIcon.Info);
         }
     }
 
     public class ServiceStartMenuItem : ServiceMenuItem
     {
-        public ServiceStartMenuItem(ITrayController controller, Service service) 
+        public ServiceStartMenuItem(ITrayController controller, Service service)
             : base(controller, service) { }
 
-        protected override string DisplayText => "Start service";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceStart");
 
         protected override string ImageKey => "service-start";
 
-        protected override bool IsVisible => this.Service.IsStopped();
+        protected override bool IsVisible
+            => this.Service.Controller?.Status == ServiceControllerStatus.Stopped;
 
         protected override async void Action()
         {
-            await Task.Factory.StartNew(this.Service.StartService);
+            await Task.Factory.StartNew(this.Service.Controller.StartService);
             this.Controller.ShowBaloon("Started", $"Service {this.Service.DisplayName} was started", ToolTipIcon.Info);
         }
     }
 
     public class ServiceStopMenuItem : ServiceMenuItem
     {
-        public ServiceStopMenuItem(ITrayController controller, Service service) 
+        public ServiceStopMenuItem(ITrayController controller, Service service)
             : base(controller, service) { }
 
-        protected override string DisplayText => "Stop service";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceStop");
 
         protected override string ImageKey => "service-stop";
 
-        protected override bool IsVisible => this.Service.IsStarted();
+        protected override bool IsVisible
+            => this.Service.Controller != null && this.Service.Controller.Status == ServiceControllerStatus.Running;
 
         protected override async void Action()
         {
-            await Task.Factory.StartNew(this.Service.StopService);
+            await Task.Factory.StartNew(this.Service.Controller.StopService);
             this.Controller.ShowBaloon("Started", $"Service {this.Service.DisplayName} was stopped", ToolTipIcon.Info);
         }
     }
 
-    #endregion
+    #endregion Service related menu items
 
     #region Service group related menu items
 
@@ -264,23 +287,24 @@ namespace WTManager.Tray
         }
 
         private string DisplayGroupName
-            => String.IsNullOrEmpty(this.GroupName) ? "<Ungrouped>" : this.GroupName;
+            => String.IsNullOrEmpty(this.GroupName) ? "<" + LocalizationManager.Get("TrayMenu.ServiceGroup.Ungrouped") + ">" : this.GroupName;
 
         protected override string DisplayText => $"{this.DisplayGroupName} ({this.GetStartedServicesInfo()} started)";
 
         private string GetStartedServicesInfo()
         {
             var services = ServiceHelpers.GetServicesByGroupName(this.GroupName).ToList();
-            return $"{services.Count(service => service.IsStarted())} of {services.Count}";
+            int startedCount = services.Count(s => s.Controller.Status == ServiceControllerStatus.Running);
+            return $"{startedCount} of {services.Count}";
         }
     }
 
     public class ServiceGroupStartMenuItem : ServiceGroupOperationMenuItem
     {
-        public ServiceGroupStartMenuItem(ITrayController controller, string groupName) 
+        public ServiceGroupStartMenuItem(ITrayController controller, string groupName)
             : base(controller, groupName) { }
 
-        protected override string DisplayText => "Start group";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceGroupStart");
 
         protected override string ImageKey => "service-start";
 
@@ -293,10 +317,10 @@ namespace WTManager.Tray
 
     public class ServiceGroupStopMenuItem : ServiceGroupOperationMenuItem
     {
-        public ServiceGroupStopMenuItem(ITrayController controller, string groupName) 
+        public ServiceGroupStopMenuItem(ITrayController controller, string groupName)
             : base(controller, groupName) { }
 
-        protected override string DisplayText => "Stop group";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceGroupStop");
 
         protected override string ImageKey => "service-stop";
 
@@ -309,10 +333,10 @@ namespace WTManager.Tray
 
     public class ServiceGroupRestartMenuItem : ServiceGroupOperationMenuItem
     {
-        public ServiceGroupRestartMenuItem(ITrayController controller, string groupName) 
+        public ServiceGroupRestartMenuItem(ITrayController controller, string groupName)
             : base(controller, groupName) { }
 
-        protected override string DisplayText => "Restart group";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceGroupRestart");
 
         protected override string ImageKey => "service-restart";
 
@@ -323,16 +347,44 @@ namespace WTManager.Tray
         }
     }
 
-    #endregion
+    #endregion Service group related menu items
 
     #region Root menu items
 
-    public class SystemServicesManagerMenuItem : WtMenuItem
+    public class ServiceTasksManagerMenuItem : WtMenuItem
     {
-        public SystemServicesManagerMenuItem(ITrayController controller) 
+        public ServiceTasksManagerMenuItem(ITrayController controller)
             : base(controller) { }
 
-        protected override string DisplayText => "System services manager";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ServiceScheduler");
+
+        protected override string ImageKey => "services-scheduler";
+
+        protected override void Action()
+        {
+            var dialog = new WtDialog();
+
+            var parameters = new DialogItem(ConfigManager.Instance.Config, control =>
+            {
+                control.FillLastControl = true;
+                control.FillLastGroup = true;
+                control.LabelConfiguration.ShowLables = false;
+            });
+            parameters.AddGroup(Configuration.GROUP_TASKS);
+            dialog.AddVisualSourceObject(parameters);
+
+            dialog.ShowModal();
+        }
+    }
+
+    public class SystemServicesManagerMenuItem : WtMenuItem
+    {
+        public SystemServicesManagerMenuItem(ITrayController controller)
+            : base(controller) { }
+
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.SystemServiceManager");
+
+        protected override string ImageKey => "system-services-manager";
 
         protected override void Action()
         {
@@ -342,25 +394,43 @@ namespace WTManager.Tray
 
     public class ApplicationConfigMenuItem : WtMenuItem
     {
-        public ApplicationConfigMenuItem(ITrayController controller) 
+        public ApplicationConfigMenuItem(ITrayController controller)
             : base(controller) { }
 
-        protected override string DisplayText => "Program configuration";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.ProgramConfiguration");
 
         protected override string ImageKey => "settings-manager";
 
         protected override void Action()
         {
-            new ConfigurationForm().ShowDialog();
+            var dialog = new WtDialog();
+
+            var basicPart = new DialogItem(ConfigManager.Instance.Config);
+            basicPart.AddGroup(Configuration.GROUP_GENERAL);
+            basicPart.AddGroup(Configuration.GROUP_SYSTEM);
+            basicPart.AddGroup(Configuration.GROUP_UI);
+            basicPart.Scale = 0.6f;
+            dialog.AddVisualSourceObject(basicPart);
+
+            var servicesPart = new DialogItem(ConfigManager.Instance.Config, control =>
+            {
+                control.FillLastControl = true;
+                control.FillLastGroup = true;
+                control.LabelConfiguration.ShowLables = false;
+            });
+            servicesPart.AddGroup(Configuration.GROUP_SERVICES);
+            dialog.AddVisualSourceObject(servicesPart);
+
+            dialog.ShowModal();
         }
     }
 
     public class ApplicationExitMenuItem : WtMenuItem
     {
-        public ApplicationExitMenuItem(ITrayController controller) 
+        public ApplicationExitMenuItem(ITrayController controller)
             : base(controller) { }
 
-        protected override string DisplayText => "Exit";
+        protected override string DisplayText => LocalizationManager.Get("TrayMenu.AppExit");
 
         protected override string ImageKey => "app-exit";
 
@@ -370,7 +440,7 @@ namespace WTManager.Tray
         }
     }
 
-    #endregion
+    #endregion Root menu items
 
     #region Menu handlers
 
@@ -400,5 +470,5 @@ namespace WTManager.Tray
         }
     }
 
-    #endregion
+    #endregion Menu handlers
 }

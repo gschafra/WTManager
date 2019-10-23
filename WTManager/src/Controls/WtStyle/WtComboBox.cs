@@ -2,30 +2,35 @@
 using System.Collections;
 using System.Linq;
 using System.Windows.Forms;
-using WTManager.Lib;
+using WtManager.Lib;
 
-namespace WTManager.Controls.WtStyle
+namespace WtManager.Controls.WtStyle
 {
     public class WtComboBox : ComboBox
     {
         public object GetSelectedValue()
         {
-            var comboItem = this.SelectedItem as ComboBoxItem;
-
-            if (comboItem != null)
+            if (this.SelectedItem is ComboBoxItem comboItem)
+            {
                 return comboItem.Value;
+            }
 
-            if (this.SelectedItem != null)
-                return this.SelectedItem;
-
-            return this.Text;
+            return this.SelectedItem ?? this.Text;
         }
 
         public void SetItems(IEnumerable items)
         {
             this.Items.Clear();
             this.Items.AddRange(items.Cast<object>().ToArray());
+
+            if (this.Items.Count > 0)
+            {
+                this.SelectedIndex = 0;
+            }
         }
+
+        public void SetEnumItems<T>() where T : struct
+            => this.SetItems(ComboBoxItem.FromEnum<T>());
 
         #region Helpers
 
@@ -34,11 +39,14 @@ namespace WTManager.Controls.WtStyle
             bool IsEqual(object item)
             {
                 if (item == null && value == null)
+                {
                     return true;
+                }
 
-                var comparable = item as IComparable;
-                if (comparable != null && comparable.CompareTo(value) == 0)
+                if (item is IComparable comparable && comparable.CompareTo(value) == 0)
+                {
                     return true;
+                }
 
                 return false;
             }
@@ -46,17 +54,23 @@ namespace WTManager.Controls.WtStyle
             for (int i = 0; i < this.Items.Count; i++)
             {
                 var comboItem = this.Items[i] as ComboBoxItem;
-                if (comboItem == null && IsEqual(this.Items[i]) || comboItem != null && IsEqual(comboItem.Value))
+                if ((comboItem == null && IsEqual(this.Items[i])) || (comboItem != null && IsEqual(comboItem.Value)))
+                {
                     return i;
+                }
             }
             return -1;
         }
 
         public void SelectByValue(object value)
         {
-            this.SelectedIndex = this.FindIndex(value);
+            var itemIndex = this.FindIndex(value);
+            if (this.Items.Count > 0)
+            {
+                this.SelectedIndex = itemIndex == -1 ? 0 : itemIndex;
+            }
         }
 
-        #endregion
+        #endregion Helpers
     }
 }

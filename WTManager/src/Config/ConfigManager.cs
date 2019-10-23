@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using Newtonsoft.Json;
+using WtManager.Resources;
 
-namespace WTManager.Config
+namespace WtManager.Config
 {
     public class ConfigManager
     {
@@ -13,9 +14,22 @@ namespace WTManager.Config
 
         public Configuration Config { get; private set; }
 
+        /// <summary>
+        /// Configuration was loaded from file
+        /// </summary>
+        public event Action<Configuration> ConfigLoaded;
+
+        /// <summary>
+        /// Cofiguration was saved to file
+        /// </summary>
         public event Action<Configuration> ConfigSaved;
 
         private ConfigManager()
+        {
+            this.Config = this.LoadConfig();
+        }
+
+        public Configuration LoadConfig()
         {
             var resultObj = new Configuration();
 
@@ -26,11 +40,14 @@ namespace WTManager.Config
                 {
                     string fileContent = File.ReadAllText(configFileName);
                     resultObj = JsonConvert.DeserializeObject<Configuration>(fileContent);
+
+                    this.PostProcessConfig(resultObj);
+                    this.ConfigLoaded?.Invoke(resultObj);
                 }
             }
             catch { /* ... */ }
 
-            this.Config = resultObj;
+            return resultObj;
         }
 
         public void SaveConfig()
@@ -38,10 +55,29 @@ namespace WTManager.Config
             try
             {
                 string configFileName = this.GetConfigFileName();
+
+                var configDirectory = Path.GetDirectoryName(configFileName);
+
+                if (!Directory.Exists(configDirectory))
+                {
+                    Directory.CreateDirectory(configDirectory);
+                }
+
                 File.WriteAllText(configFileName, JsonConvert.SerializeObject(this.Config, Formatting.Indented));
+
+                this.PostProcessConfig(this.Config);
                 this.ConfigSaved?.Invoke(this.Config);
             }
-            catch { /* ... */ }    
+            catch { /* ... */ }
+        }
+
+        /// <summary>
+        /// Executes after every load/save config operation
+        /// </summary>
+        private void PostProcessConfig(Configuration config)
+        {
+            ResourcesProcessor.ThemeName = config.ThemeName;
+            LocalizationManager.UpdateLocale(config.Language);
         }
 
         #region Utils
@@ -52,6 +88,6 @@ namespace WTManager.Config
             return Path.Combine(appDataDir, "WTManager", "config.json");
         }
 
-        #endregion
+        #endregion Utils
     }
 }

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using WTManager.Config;
-using WTManager.Controls;
-using WTManager.Resources;
+using WtManager.Config;
+using WtManager.Controls;
+using WtManager.Resources;
 
-namespace WTManager.Tray
+namespace WtManager.Tray
 {
     public abstract class WtMenuItem : IDisposable
     {
@@ -34,7 +34,6 @@ namespace WTManager.Tray
         {
             this.Controller = controller;
             this.SubItems = new List<WtMenuItem>();
-
             this._internalMenuStripItem = null;
         }
 
@@ -50,7 +49,9 @@ namespace WTManager.Tray
         public void UpdateState()
         {
             if (this._internalMenuStripItem == null)
+            {
                 return;
+            }
 
             // Update item enability
             this._internalMenuStripItem.Enabled = this.IsEnabled;
@@ -59,19 +60,25 @@ namespace WTManager.Tray
             this._internalMenuStripItem.Visible = this.IsVisible;
 
             // Update display text
-            this._internalMenuStripItem.Text = this.DisplayText;
+            this._internalMenuStripItem.Text = this.IsVisible ? this.DisplayText : String.Empty;
 
             // Update image
             if (this.ImageKey == null)
+            {
                 return;
+            }
 
             var icon = ResourcesProcessor.GetImage($"menu.{this.ImageKey}");
 
             if (icon == null)
+            {
                 return;
-            
+            }
+
             if (this._internalMenuStripItem.Image != icon)
+            {
                 this._internalMenuStripItem.Image = icon;
+            }
         }
 
         protected virtual ToolStripItem ToMenuItem()
@@ -86,7 +93,9 @@ namespace WTManager.Tray
             }
 
             if (this.SubItems == null)
+            {
                 return this._internalMenuStripItem;
+            }
 
             var subItems = this.SubItems.Select(si => si.ToMenuItem()).ToArray();
             this._internalMenuStripItem.DropDownItems.AddRange(subItems);
@@ -106,11 +115,13 @@ namespace WTManager.Tray
 
         public void Dispose()
         {
-            if (this._internalMenuStripItem != null)
+            if (this._internalMenuStripItem == null)
             {
-                this._internalMenuStripItem.Click -= this.InternalMenuStripItem_OnClick;
-                this._internalMenuStripItem.Dispose();
+                return;
             }
+
+            this._internalMenuStripItem.Click -= this.InternalMenuStripItem_OnClick;
+            this._internalMenuStripItem.Dispose();
         }
     }
 }

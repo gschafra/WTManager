@@ -1,14 +1,13 @@
 using System.Windows.Forms;
-using WTManager.Controls.WtStyle;
-using WTManager.Controls.WtStyle.WtConfigurator;
-using WTManager.Lib;
+using WtManager.Controls.WtStyle;
+using WtManager.Controls.WtStyle.WtConfigurator;
 
-namespace WTManager.VisualItemRenderers
+namespace WtManager.VisualItemRenderers
 {
     public class VisualTextRenderer : VisualItemRenderer
     {
-        public VisualTextRenderer(IVisualProviderObject provider) 
-            : base(provider) { }
+        public VisualTextRenderer(IVisualSourceObject source) 
+            : base(source) { }
 
         protected override Control CreateControl()
         {

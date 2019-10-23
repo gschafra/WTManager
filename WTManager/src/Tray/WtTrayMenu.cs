@@ -5,13 +5,13 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
-using WTManager.Config;
-using WTManager.Controls;
-using WTManager.Helpers;
-using WTManager.Lib;
-using WTManager.Resources;
+using WtManager.Config;
+using WtManager.Controls;
+using WtManager.Helpers;
+using WtManager.Lib;
+using WtManager.Resources;
 
-namespace WTManager.Tray
+namespace WtManager.Tray
 {
     public class TrayMenu : ITrayController, IEnumerable<WtMenuItem>, IDisposable
     {
@@ -23,6 +23,8 @@ namespace WTManager.Tray
         private readonly MethodInfo _showContextMenuMethod;
         private readonly NotifyIcon _notifyIcon;
         private readonly Timer _updateTimer;
+
+        private readonly ServiceTasksManager _taskProcessor;
 
         private ContextMenuStrip ContextMenu => this._notifyIcon.ContextMenuStrip;
 
@@ -37,9 +39,11 @@ namespace WTManager.Tray
             this._notifyIcon.ContextMenuStrip.Renderer = new WtToolStripMenuRenderer();
 
             // Update menu items state timer
-            this._updateTimer = new Timer {Interval = 1000};
+            this._updateTimer = new Timer { Interval = 1000 };
             this._updateTimer.Tick += this.UpdateTimer_OnTick;
             this._updateTimer.Start();
+
+            this._taskProcessor = new ServiceTasksManager(this);
 
             this._menuGenerator = new MenuGenerator(this);
 
@@ -61,8 +65,10 @@ namespace WTManager.Tray
         public void Dispose()
         {
             foreach (var menuItem in this)
+            {
                 menuItem.Dispose();
-  
+            }
+
             this._updateTimer.Tick -= this.UpdateTimer_OnTick;
             this._updateTimer.Stop();
             this._updateTimer.Dispose();
@@ -90,15 +96,20 @@ namespace WTManager.Tray
         private void UpdateTimer_OnTick(object sender, EventArgs eventArgs)
         {
             this.UpdateTrayMenu();
+            this._taskProcessor.Process();
         }
 
         private void NotifyIcon_OnMouseUp(object o, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)
+            {
                 return;
+            }
 
             if (e.Button == MouseButtons.Left && !ConfigManager.Instance.Config.OpenTrayMenuOnLeftClick)
+            {
                 return;
+            }
 
             this._showContextMenuMethod?.Invoke(this._notifyIcon, null);
         }
@@ -108,7 +119,7 @@ namespace WTManager.Tray
             this.ShowContextMenu(this.ContextMenu);
         }
 
-        #endregion
+        #endregion Event handlers
 
         private void ShowContextMenu(ContextMenuStrip menu)
         {
@@ -123,23 +134,26 @@ namespace WTManager.Tray
                     dropDownDirection = ToolStripDropDownDirection.Left;
                     int rightXPos = beyondTaskbar ? Taskbar.CurrentBounds.Left : Cursor.Position.X;
                     position = new Point(rightXPos, Cursor.Position.Y);
-                    break;                
+                    break;
+
                 case TaskbarPosition.Left:
                     dropDownDirection = ToolStripDropDownDirection.Right;
                     int leftXPos = beyondTaskbar ? Taskbar.CurrentBounds.Right : Cursor.Position.X;
                     position = new Point(leftXPos, Cursor.Position.Y);
                     break;
+
                 case TaskbarPosition.Top:
                     dropDownDirection = ToolStripDropDownDirection.Right;
                     int topYPos = beyondTaskbar ? Taskbar.CurrentBounds.Bottom : Cursor.Position.Y;
                     position = new Point(Cursor.Position.X, topYPos);
                     break;
+
                 case TaskbarPosition.Bottom:
                     dropDownDirection = ToolStripDropDownDirection.Default;
                     int bottomYPos = beyondTaskbar ? Taskbar.CurrentBounds.Top : Cursor.Position.Y;
                     position = new Point(Cursor.Position.X, bottomYPos - this.ContextMenu.Height);
                     break;
-            } 
+            }
             menu.Show(position, dropDownDirection);
         }
 
@@ -147,9 +161,11 @@ namespace WTManager.Tray
         {
             this.ClearMenu();
 
-            foreach(var menuItem in this._menuGenerator.GenerateMenu())
+            foreach (var menuItem in this._menuGenerator.GenerateMenu())
+            {
                 this.AddMenuItem(menuItem);
-            
+            }
+
             this.UpdateTrayMenu();
         }
 
@@ -168,21 +184,27 @@ namespace WTManager.Tray
         public void UpdateTrayMenu()
         {
             foreach (var menuItem in this)
+            {
                 menuItem.UpdateState();
+            }
         }
 
         public void ShowBaloon(string title, string message, ToolTipIcon icon)
         {
             if (!ConfigManager.Instance.Config.ShowPopup)
+            {
                 return;
+            }
 
             if (!Enum.IsDefined(typeof(ToolTipIcon), icon))
+            {
                 throw new ArgumentOutOfRangeException(nameof(icon));
+            }
 
             this._notifyIcon.ShowBalloonTip(BALOON_SHOW_TIME, title, message, ToolTipIcon.Info);
         }
 
-        #endregion
+        #endregion ITrayController
 
         #region IEnumerable implementation
 
@@ -193,7 +215,9 @@ namespace WTManager.Tray
                 var wtMenuItem = tsItem.Tag as WtMenuItem;
 
                 if (wtMenuItem == null)
+                {
                     continue;
+                }
 
                 // yield root item
                 yield return wtMenuItem;
@@ -211,7 +235,7 @@ namespace WTManager.Tray
             return this.GetEnumerator();
         }
 
-        #endregion
+        #endregion IEnumerable implementation
     }
 
     #region Utils
@@ -246,5 +270,5 @@ namespace WTManager.Tray
         void UpdateTrayMenu();
     }
 
-    #endregion
+    #endregion Utils
 }

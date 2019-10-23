@@ -1,18 +1,15 @@
 using System.Collections;
 using System.Linq;
 using System.Windows.Forms;
-using WTManager.Config;
-using WTManager.Controls.WtStyle;
-using WTManager.Controls.WtStyle.WtConfigurator;
-using WTManager.Forms;
-using WTManager.Lib;
+using WtManager.Controls.WtStyle;
+using WtManager.Controls.WtStyle.WtConfigurator;
 
-namespace WTManager.VisualItemRenderers
+namespace WtManager.VisualItemRenderers
 {
     public abstract class VisualItemsEditorRenderer<T> : VisualItemRenderer
     {
-        protected VisualItemsEditorRenderer(IVisualProviderObject provider) 
-            : base(provider) { }
+        protected VisualItemsEditorRenderer(IVisualSourceObject source) 
+            : base(source) { }
 
         protected override Control CreateControl()
         {
@@ -44,22 +41,41 @@ namespace WTManager.VisualItemRenderers
         protected virtual object EditHandler(object arg) => null;
     }
 
-    public class VisualServicesItemsEditorRenderer : VisualItemsEditorRenderer<Service>
+    public class VisualDialogItemsEditorRenderer<T> : VisualItemsEditorRenderer<T> where T : IVisualSourceObject, new()
     {
-        public VisualServicesItemsEditorRenderer(IVisualProviderObject provider) 
-            : base(provider) { }
+        public VisualDialogItemsEditorRenderer(IVisualSourceObject source) 
+            : base(source) { }
 
-        protected override object CreateHandler() 
-            => AddEditServiceForm.AddItem();
+        protected override object CreateHandler()
+        {
+            var dialog = new WtDialog();
 
-        protected override object EditHandler(object arg) 
-            => AddEditServiceForm.EditItem(arg as Service);
+            dialog.AddVisualSourceObject(new DialogItem(new T()));
+
+            if (dialog.ShowModal() == DialogResult.OK)
+                return dialog.GetSourceObject<T>();
+
+            return null;
+        }
+
+        protected override object EditHandler(object arg)
+        {
+            var dialog = new WtDialog();
+            var visualObject = (T)arg;
+
+            dialog.AddVisualSourceObject(new DialogItem(visualObject));
+
+            if (dialog.ShowModal() == DialogResult.OK)
+                return dialog.GetSourceObject<T>();
+
+            return null;
+        }
     }
-
+    
     public class VisualFilesItemsEditorRenderer : VisualItemsEditorRenderer<string>
     {
-        public VisualFilesItemsEditorRenderer(IVisualProviderObject provider) 
-            : base(provider) { }
+        public VisualFilesItemsEditorRenderer(IVisualSourceObject source) 
+            : base(source) { }
 
         protected override void ConfigureControl(WtItemEditor control)
         {

@@ -4,24 +4,24 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using WTManager.Helpers;
-using WTManager.Lib;
+using WtManager.Resources;
+using WtManager.VisualItemRenderers;
+using WtManager.Helpers;
 
-namespace WTManager.Controls.WtStyle.WtConfigurator
+namespace WtManager.Controls.WtStyle.WtConfigurator
 {
     /// <summary>
     /// !!! TODO: Refactor !!!
     /// </summary>
-    public partial class WtConfigurator : WtUserControl
+    public partial class WtConfiguratorControl : WtUserControl
     {
         private int _currentTopCoord;
         private DynamicPropertiesProcessor _processor;
 
         private readonly List<IDependentStateProvider> _dependentProvidersCache;
-
         private readonly ScrollableControl _mainPanel;
 
-        public WtConfigurator()
+        public WtConfiguratorControl()
         {
             this._dependentProvidersCache = new List<IDependentStateProvider>();
 
@@ -33,18 +33,26 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
             this.Controls.Add(this._mainPanel);
         }
 
-        public void FillSettings(IVisualProviderObject propClass, params string[] groupNames)
+        public void FillSettings(IVisualSourceObject propClass, params string[] groupNames)
         {
             // initialize
             this._currentTopCoord = 0;
             this._processor = new DynamicPropertiesProcessor(propClass);
 
-            if (groupNames.Length == 0)
+            if (groupNames == null || groupNames.Length == 0)
+            {
                 groupNames = this._processor.EnumerateGroupNames().ToArray();
+            }
 
             for (int i = 0; i < groupNames.Length; i++)
             {
                 var propertyGroups = this._processor.GetGroupProperties(groupNames[i]);
+
+                // empty group, skipping
+                if (propertyGroups.Count == 0)
+                {
+                    continue;
+                }
 
                 bool isLastGroup = i == groupNames.Length - 1;
                 var group = this.CreateGroup(propClass, groupNames[i], propertyGroups, this.FillLastGroup && isLastGroup);
@@ -53,7 +61,7 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
             }
         }
 
-        private Control CreateGroup(IVisualProviderObject propClass, string groupName, IEnumerable<PropertyInfo> props, bool isLastGroup)
+        private Control CreateGroup(IVisualSourceObject propClass, string groupName, IEnumerable<PropertyInfo> props, bool isLastGroup)
         {
             var mainGroupBoxContainer = new WtGroupSeparator
             {
@@ -77,12 +85,16 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
                 var rendererAttr = prop.GetCustomAttribute<VisualItemAttribute>();
 
                 if (rendererAttr == null)
+                {
                     continue;
+                }
 
                 var renderer = Activator.CreateInstance(rendererAttr.RendererType, propClass) as VisualItemRenderer;
 
                 if (renderer?.Control == null)
+                {
                     continue;
+                }
 
                 var customData = prop.GetCustomAttribute<VisualItemCustomizationAttribute>();
 
@@ -90,23 +102,29 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
 
                 int controlHeight = this.ItemHeight;
                 if (customData != null && customData.CustomHeight != -1)
+                {
                     controlHeight = customData.CustomHeight;
+                }
 
                 renderer.Control.Location = new Point(this.HorizontalItemPadding, initTop);
-                renderer.Control.Size = new Size(panel.Width - this.HorizontalItemPadding * 2, controlHeight);
+                renderer.Control.Size = new Size(panel.Width - (this.HorizontalItemPadding * 2), controlHeight);
                 renderer.Control.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
                 renderer.Control.Name = prop.Name;
 
                 if (i == properties.Length - 1)
-                    lastControl = renderer.Control;
-
-                if ( this.LabelConfiguration.ShowLables)
                 {
-                    bool setInternalLabelResult = renderer.SetLabel(rendererAttr.DisplayText, this.LabelConfiguration);
+                    lastControl = renderer.Control;
+                }
+
+                if (this.LabelConfiguration.ShowLables)
+                {
+                    string text = LocalizationManager.Get($"VisualItem.{propClass.LocalizationPrefix}.{prop.Name}");
+
+                    bool setInternalLabelResult = renderer.SetLabel(text, this.LabelConfiguration);
 
                     if (!setInternalLabelResult)
                     {
-                        var label = this.CreateLabel(rendererAttr.DisplayText);
+                        var label = this.CreateLabel(text);
                         label.Location = new Point(this.HorizontalItemPadding, initTop);
                         label.Height = controlHeight;
 
@@ -121,7 +139,9 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
                 renderer.SetValue(prop.GetValue(propClass));
 
                 if (renderer is IDependentStateProvider dependentStateProvider)
+                {
                     this._dependentProvidersCache.Add(dependentStateProvider);
+                }
 
                 void ApplyRendererValue()
                 {
@@ -140,8 +160,10 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
             mainGroupBoxContainer.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top;
             mainGroupBoxContainer.Top = this._currentTopCoord;
 
-            if (lastControl != null && this.FillLastControl) 
+            if (lastControl != null && this.FillLastControl)
+            {
                 lastControl.Anchor |= AnchorStyles.Bottom;
+            }
 
             if (isLastGroup && this._currentTopCoord + initTop < this._mainPanel.Height)
             {
@@ -161,13 +183,16 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
             this.SuspendLayout();
 
             var dependentControlNames = this._processor.FindDependentControls(controlName);
-            foreach (string depenentControlName in dependentControlNames)
+            foreach (var dependentAttribute in dependentControlNames)
             {
-                var control = this.Controls.Find(depenentControlName, true);
+                string dependentControlName = dependentAttribute.PropertyName;
+                var control = this.Controls.Find(dependentControlName, true);
                 if (control.Length != 1)
+                {
                     continue;
+                }
 
-                control.First().Enabled = isChecked;
+                control.First().Enabled = dependentAttribute.IsReversed ? !isChecked : isChecked;
             }
 
             this.ResumeLayout();
@@ -180,13 +205,15 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
                 dependencyControl.StateChanged += this.StateProvider_OnStateChanged;
 
                 if (!(dependencyControl is VisualItemRenderer visualItem) || visualItem.Control == null)
+                {
                     return;
+                }
 
                 this.UpdateDependentControlsState(visualItem.Control.Name, dependencyControl.CurrentState);
             }
         }
 
-        private void StateProvider_OnStateChanged(string controlName, bool isChecked) 
+        private void StateProvider_OnStateChanged(string controlName, bool isChecked)
             => this.UpdateDependentControlsState(controlName, isChecked);
 
         private Label CreateLabel(string text)
@@ -196,7 +223,7 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
                 TextAlign = ContentAlignment.MiddleLeft,
                 Anchor = AnchorStyles.Left | AnchorStyles.Top,
                 Width = this.LabelWidth,
-                Text = $"{text}" + this.LabelConfiguration.LabelPostfix,
+                Text = $"{text}{this.LabelConfiguration.LabelPostfix}",
                 AutoEllipsis = true,
                 Font = this.LabelFont
             };
@@ -219,10 +246,8 @@ namespace WTManager.Controls.WtStyle.WtConfigurator
                 using (var brush = new SolidBrush(Color.Black))
                 {
                     e.Graphics.DrawString(this.Name, titleFont, brush, 0, 0);
-
                     e.Graphics.DrawString("Dynamic configurator", DefaultFont, brush, 0, 20);
-                    e.Graphics.DrawString("Use FillSettings<T> method in your code to fill this screen", DefaultFont,
-                        brush, 0, 40);
+                    e.Graphics.DrawString("Use FillSettings<T> method in your code to fill this screen", DefaultFont, brush, 0, 40);
                 }
                 return;
             }

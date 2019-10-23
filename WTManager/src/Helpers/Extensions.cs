@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace WTManager.Helpers
+namespace WtManager.Helpers
 {
     public static class Extensions
     {
@@ -85,5 +85,20 @@ namespace WTManager.Helpers
 
         #endregion
 
+        public static T GetAttribute<T, TEnum>(this TEnum enumVal) where T : Attribute where TEnum : struct
+        {
+            if (!(enumVal is Enum))
+                return null;
+
+            var type = enumVal.GetType();
+            var memInfo = type.GetMember(enumVal.ToString());
+            var attributes = memInfo[0].GetCustomAttributes(typeof(T), false);
+            return attributes.Length > 0 ? (T)attributes[0] : null;
+        }
+
+        public static bool IsLastIndex<T>(this List<T> list, int index)
+            => index == list.Count - 1;
+
     }
+
 }

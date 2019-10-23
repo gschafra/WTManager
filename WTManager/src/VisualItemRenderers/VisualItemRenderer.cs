@@ -1,17 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
-using WTManager.Controls.WtStyle.WtConfigurator;
+using WtManager.Controls.WtStyle.WtConfigurator;
 
-namespace WTManager.Lib
+namespace WtManager.VisualItemRenderers
 {
     public abstract class VisualItemRenderer
     {
         public Control Control { get; private set; }
 
-        protected IVisualProviderObject VisualProvider { get; private set; }
+        protected IVisualSourceObject VisualSource { get; private set; }
 
-        protected VisualItemRenderer(IVisualProviderObject provider)
+        [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
+        protected VisualItemRenderer(IVisualSourceObject source)
         {
-            this.VisualProvider = provider;
+            this.VisualSource = source;
             this.Control = this.CreateControl();
         }
 
