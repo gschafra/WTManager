@@ -8,13 +8,12 @@ namespace WtManager.Resources
     {
         private static LocalizationItem _item;
 
-        public static readonly List<string> LocalesList = new List<string> {"english", "russian", "german"};
+        public static readonly List<string> LocalesList = new List<string> { "english", "russian", "german" };
 
         static LocalizationManager()
         {
             UpdateLocale("english");
         }
-
 
         public static void UpdateLocale(string locale)
         {
@@ -38,7 +37,6 @@ namespace WtManager.Resources
     public class LocalizationItem
     {
         private IniData _localizationData;
-
 
         public LocalizationItem(string inputStream)
         {

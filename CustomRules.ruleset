@@ -7,4 +7,11 @@
     <Rule Id="CA1812" Action="Warning" />
     <Rule Id="CA1823" Action="Warning" />
   </Rules>
+  <Rules AnalyzerId="Microsoft.CodeAnalysis.CSharp.Features" RuleNamespace="Microsoft.CodeAnalysis.CSharp.Features">
+    <Rule Id="IDE0011" Action="Info" />
+    <Rule Id="IDE0011WithoutSuggestion" Action="Info" />
+    <Rule Id="IDE0047" Action="None" />
+    <Rule Id="IDE0048" Action="Info" />
+    <Rule Id="IDE0048WithoutSuggestion" Action="Info" />
+  </Rules>
 </RuleSet>

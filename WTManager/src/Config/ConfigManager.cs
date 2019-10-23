@@ -58,17 +58,18 @@ namespace WtManager.Config
 
                 var configDirectory = Path.GetDirectoryName(configFileName);
 
-                if (! Directory.Exists(configDirectory))
+                if (!Directory.Exists(configDirectory))
+                {
                     Directory.CreateDirectory(configDirectory);
+                }
 
                 File.WriteAllText(configFileName, JsonConvert.SerializeObject(this.Config, Formatting.Indented));
 
                 this.PostProcessConfig(this.Config);
                 this.ConfigSaved?.Invoke(this.Config);
             }
-            catch { /* ... */ }    
+            catch { /* ... */ }
         }
-
 
         /// <summary>
         /// Executes after every load/save config operation
@@ -87,6 +88,6 @@ namespace WtManager.Config
             return Path.Combine(appDataDir, "WTManager", "config.json");
         }
 
-        #endregion
+        #endregion Utils
     }
 }

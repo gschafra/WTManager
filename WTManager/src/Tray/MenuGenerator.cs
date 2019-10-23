@@ -35,7 +35,9 @@ namespace WtManager.Tray
                     var groupMenuItem = new ServiceGroupMenuItem(this._controller, group.Key);
 
                     foreach (var service in group)
+                    {
                         groupMenuItem.AddSubItem(this.CreateServiceMenu(service));
+                    }
 
                     if (ConfigManager.Instance.Config.ShowServiceGroupOperations)
                     {
@@ -49,17 +51,23 @@ namespace WtManager.Tray
                 else
                 {
                     if (!String.IsNullOrEmpty(group.Key))
+                    {
                         menuItems.Add(new TitleMenuItem(this._controller, group.Key));
+                    }
 
                     foreach (var service in group)
+                    {
                         menuItems.Add(this.CreateServiceMenu(service));
-                    
+                    }
+
                     menuItems.Add(new SeparatorMenuItem(this._controller));
                 }
             }
 
             if (ConfigManager.Instance.Config.UseNestedServiceGroups)
+            {
                 menuItems.Add(new SeparatorMenuItem(this._controller));
+            }
 
             menuItems.Add(new ServiceTasksManagerMenuItem(this._controller));
             menuItems.Add(new SystemServicesManagerMenuItem(this._controller));
@@ -85,7 +93,9 @@ namespace WtManager.Tray
             {
                 topServiceMenuItem.AddSubItem(new TitleMenuItem(this._controller, "Config files"));
                 foreach (string file in service.ConfigFiles.Where(File.Exists))
+                {
                     topServiceMenuItem.AddSubItem(new ServiceConfigMenuItem(this._controller, file));
+                }
 
                 topServiceMenuItem.AddSubItem(new SeparatorMenuItem(this._controller));
             }
@@ -93,7 +103,9 @@ namespace WtManager.Tray
             {
                 topServiceMenuItem.AddSubItem(new TitleMenuItem(this._controller, "Log files"));
                 foreach (string file in service.LogFiles.Where(File.Exists))
+                {
                     topServiceMenuItem.AddSubItem(new ServiceLogMenuItem(this._controller, file));
+                }
 
                 topServiceMenuItem.AddSubItem(new SeparatorMenuItem(this._controller));
             }
@@ -116,5 +128,5 @@ namespace WtManager.Tray
         IEnumerable<WtMenuItem> GenerateMenu();
     }
 
-    #endregion
+    #endregion Utils
 }

@@ -24,7 +24,7 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
         private bool IsVisualRendererProperty(PropertyInfo prop)
             => prop.GetCustomAttribute<VisualItemAttribute>() != null;
 
-        private string GetGroupName(PropertyInfo prop) 
+        private string GetGroupName(PropertyInfo prop)
             => prop.GetCustomAttribute<VisualItemAttribute>()?.GroupTitle ?? String.Empty;
 
         public List<PropertyInfo> GetGroupProperties(string groupName)
@@ -34,7 +34,9 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
             foreach (var prop in this.Properties)
             {
                 if (this.IsVisualRendererProperty(prop) && this.GetGroupName(prop) == groupName)
+                {
                     propertiesList.Add(prop);
+                }
             }
             return propertiesList;
         }
@@ -46,20 +48,25 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
                 var dependentOn = propertyInfo.GetCustomAttributes<VisualItemDependentOnAttribute>().ToList();
                 var depOn = dependentOn.FirstOrDefault(d => d.DependentProperty == dependencyName);
                 if (depOn != null)
+                {
                     yield return new DependentInfo(propertyInfo.Name, depOn.ReverseDependent);
+                }
             }
         }
     }
 
     public class DependentInfo
     {
-        public string PropertyName;
-        public bool IsReversed;
+        private string propertyName;
+        private bool isReversed;
+
+        public string PropertyName { get => propertyName; set => propertyName = value; }
+        public bool IsReversed { get => isReversed; set => isReversed = value; }
 
         public DependentInfo(string propertyName, bool isReversed)
         {
-            this.PropertyName = propertyName;
-            this.IsReversed = isReversed;
+            this.propertyName = propertyName;
+            this.isReversed = isReversed;
         }
     }
 }

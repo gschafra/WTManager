@@ -40,7 +40,9 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
             this._processor = new DynamicPropertiesProcessor(propClass);
 
             if (groupNames == null || groupNames.Length == 0)
+            {
                 groupNames = this._processor.EnumerateGroupNames().ToArray();
+            }
 
             for (int i = 0; i < groupNames.Length; i++)
             {
@@ -48,7 +50,9 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
 
                 // empty group, skipping
                 if (propertyGroups.Count == 0)
+                {
                     continue;
+                }
 
                 bool isLastGroup = i == groupNames.Length - 1;
                 var group = this.CreateGroup(propClass, groupNames[i], propertyGroups, this.FillLastGroup && isLastGroup);
@@ -81,12 +85,16 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
                 var rendererAttr = prop.GetCustomAttribute<VisualItemAttribute>();
 
                 if (rendererAttr == null)
+                {
                     continue;
+                }
 
                 var renderer = Activator.CreateInstance(rendererAttr.RendererType, propClass) as VisualItemRenderer;
 
                 if (renderer?.Control == null)
+                {
                     continue;
+                }
 
                 var customData = prop.GetCustomAttribute<VisualItemCustomizationAttribute>();
 
@@ -94,17 +102,21 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
 
                 int controlHeight = this.ItemHeight;
                 if (customData != null && customData.CustomHeight != -1)
+                {
                     controlHeight = customData.CustomHeight;
+                }
 
                 renderer.Control.Location = new Point(this.HorizontalItemPadding, initTop);
-                renderer.Control.Size = new Size(panel.Width - this.HorizontalItemPadding * 2, controlHeight);
+                renderer.Control.Size = new Size(panel.Width - (this.HorizontalItemPadding * 2), controlHeight);
                 renderer.Control.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
                 renderer.Control.Name = prop.Name;
 
                 if (i == properties.Length - 1)
+                {
                     lastControl = renderer.Control;
+                }
 
-                if ( this.LabelConfiguration.ShowLables)
+                if (this.LabelConfiguration.ShowLables)
                 {
                     string text = LocalizationManager.Get($"VisualItem.{propClass.LocalizationPrefix}.{prop.Name}");
 
@@ -127,7 +139,9 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
                 renderer.SetValue(prop.GetValue(propClass));
 
                 if (renderer is IDependentStateProvider dependentStateProvider)
+                {
                     this._dependentProvidersCache.Add(dependentStateProvider);
+                }
 
                 void ApplyRendererValue()
                 {
@@ -146,8 +160,10 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
             mainGroupBoxContainer.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top;
             mainGroupBoxContainer.Top = this._currentTopCoord;
 
-            if (lastControl != null && this.FillLastControl) 
+            if (lastControl != null && this.FillLastControl)
+            {
                 lastControl.Anchor |= AnchorStyles.Bottom;
+            }
 
             if (isLastGroup && this._currentTopCoord + initTop < this._mainPanel.Height)
             {
@@ -172,7 +188,9 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
                 string dependentControlName = dependentAttribute.PropertyName;
                 var control = this.Controls.Find(dependentControlName, true);
                 if (control.Length != 1)
+                {
                     continue;
+                }
 
                 control.First().Enabled = dependentAttribute.IsReversed ? !isChecked : isChecked;
             }
@@ -187,13 +205,15 @@ namespace WtManager.Controls.WtStyle.WtConfigurator
                 dependencyControl.StateChanged += this.StateProvider_OnStateChanged;
 
                 if (!(dependencyControl is VisualItemRenderer visualItem) || visualItem.Control == null)
+                {
                     return;
+                }
 
                 this.UpdateDependentControlsState(visualItem.Control.Name, dependencyControl.CurrentState);
             }
         }
 
-        private void StateProvider_OnStateChanged(string controlName, bool isChecked) 
+        private void StateProvider_OnStateChanged(string controlName, bool isChecked)
             => this.UpdateDependentControlsState(controlName, isChecked);
 
         private Label CreateLabel(string text)

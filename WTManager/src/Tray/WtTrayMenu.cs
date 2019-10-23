@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Windows.Forms;
 using WtManager.Config;
 using WtManager.Controls;
+using WtManager.Helpers;
 using WtManager.Lib;
 using WtManager.Resources;
-using WtManager.Helpers;
 
 namespace WtManager.Tray
 {
@@ -39,7 +39,7 @@ namespace WtManager.Tray
             this._notifyIcon.ContextMenuStrip.Renderer = new WtToolStripMenuRenderer();
 
             // Update menu items state timer
-            this._updateTimer = new Timer {Interval = 1000};
+            this._updateTimer = new Timer { Interval = 1000 };
             this._updateTimer.Tick += this.UpdateTimer_OnTick;
             this._updateTimer.Start();
 
@@ -65,8 +65,10 @@ namespace WtManager.Tray
         public void Dispose()
         {
             foreach (var menuItem in this)
+            {
                 menuItem.Dispose();
-  
+            }
+
             this._updateTimer.Tick -= this.UpdateTimer_OnTick;
             this._updateTimer.Stop();
             this._updateTimer.Dispose();
@@ -100,10 +102,14 @@ namespace WtManager.Tray
         private void NotifyIcon_OnMouseUp(object o, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)
+            {
                 return;
+            }
 
             if (e.Button == MouseButtons.Left && !ConfigManager.Instance.Config.OpenTrayMenuOnLeftClick)
+            {
                 return;
+            }
 
             this._showContextMenuMethod?.Invoke(this._notifyIcon, null);
         }
@@ -113,7 +119,7 @@ namespace WtManager.Tray
             this.ShowContextMenu(this.ContextMenu);
         }
 
-        #endregion
+        #endregion Event handlers
 
         private void ShowContextMenu(ContextMenuStrip menu)
         {
@@ -128,23 +134,26 @@ namespace WtManager.Tray
                     dropDownDirection = ToolStripDropDownDirection.Left;
                     int rightXPos = beyondTaskbar ? Taskbar.CurrentBounds.Left : Cursor.Position.X;
                     position = new Point(rightXPos, Cursor.Position.Y);
-                    break;                
+                    break;
+
                 case TaskbarPosition.Left:
                     dropDownDirection = ToolStripDropDownDirection.Right;
                     int leftXPos = beyondTaskbar ? Taskbar.CurrentBounds.Right : Cursor.Position.X;
                     position = new Point(leftXPos, Cursor.Position.Y);
                     break;
+
                 case TaskbarPosition.Top:
                     dropDownDirection = ToolStripDropDownDirection.Right;
                     int topYPos = beyondTaskbar ? Taskbar.CurrentBounds.Bottom : Cursor.Position.Y;
                     position = new Point(Cursor.Position.X, topYPos);
                     break;
+
                 case TaskbarPosition.Bottom:
                     dropDownDirection = ToolStripDropDownDirection.Default;
                     int bottomYPos = beyondTaskbar ? Taskbar.CurrentBounds.Top : Cursor.Position.Y;
                     position = new Point(Cursor.Position.X, bottomYPos - this.ContextMenu.Height);
                     break;
-            } 
+            }
             menu.Show(position, dropDownDirection);
         }
 
@@ -152,9 +161,11 @@ namespace WtManager.Tray
         {
             this.ClearMenu();
 
-            foreach(var menuItem in this._menuGenerator.GenerateMenu())
+            foreach (var menuItem in this._menuGenerator.GenerateMenu())
+            {
                 this.AddMenuItem(menuItem);
-            
+            }
+
             this.UpdateTrayMenu();
         }
 
@@ -173,21 +184,27 @@ namespace WtManager.Tray
         public void UpdateTrayMenu()
         {
             foreach (var menuItem in this)
+            {
                 menuItem.UpdateState();
+            }
         }
 
         public void ShowBaloon(string title, string message, ToolTipIcon icon)
         {
             if (!ConfigManager.Instance.Config.ShowPopup)
+            {
                 return;
+            }
 
             if (!Enum.IsDefined(typeof(ToolTipIcon), icon))
+            {
                 throw new ArgumentOutOfRangeException(nameof(icon));
+            }
 
             this._notifyIcon.ShowBalloonTip(BALOON_SHOW_TIME, title, message, ToolTipIcon.Info);
         }
 
-        #endregion
+        #endregion ITrayController
 
         #region IEnumerable implementation
 
@@ -198,7 +215,9 @@ namespace WtManager.Tray
                 var wtMenuItem = tsItem.Tag as WtMenuItem;
 
                 if (wtMenuItem == null)
+                {
                     continue;
+                }
 
                 // yield root item
                 yield return wtMenuItem;
@@ -216,7 +235,7 @@ namespace WtManager.Tray
             return this.GetEnumerator();
         }
 
-        #endregion
+        #endregion IEnumerable implementation
     }
 
     #region Utils
@@ -251,5 +270,5 @@ namespace WtManager.Tray
         void UpdateTrayMenu();
     }
 
-    #endregion
+    #endregion Utils
 }

@@ -49,7 +49,9 @@ namespace WtManager.Tray
         public void UpdateState()
         {
             if (this._internalMenuStripItem == null)
+            {
                 return;
+            }
 
             // Update item enability
             this._internalMenuStripItem.Enabled = this.IsEnabled;
@@ -62,15 +64,21 @@ namespace WtManager.Tray
 
             // Update image
             if (this.ImageKey == null)
+            {
                 return;
+            }
 
             var icon = ResourcesProcessor.GetImage($"menu.{this.ImageKey}");
 
             if (icon == null)
+            {
                 return;
-            
+            }
+
             if (this._internalMenuStripItem.Image != icon)
+            {
                 this._internalMenuStripItem.Image = icon;
+            }
         }
 
         protected virtual ToolStripItem ToMenuItem()
@@ -85,7 +93,9 @@ namespace WtManager.Tray
             }
 
             if (this.SubItems == null)
+            {
                 return this._internalMenuStripItem;
+            }
 
             var subItems = this.SubItems.Select(si => si.ToMenuItem()).ToArray();
             this._internalMenuStripItem.DropDownItems.AddRange(subItems);
@@ -106,7 +116,9 @@ namespace WtManager.Tray
         public void Dispose()
         {
             if (this._internalMenuStripItem == null)
+            {
                 return;
+            }
 
             this._internalMenuStripItem.Click -= this.InternalMenuStripItem_OnClick;
             this._internalMenuStripItem.Dispose();
