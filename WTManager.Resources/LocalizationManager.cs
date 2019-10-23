@@ -8,7 +8,7 @@ namespace WtManager.Resources
     {
         private static LocalizationItem _item;
 
-        public static readonly List<string> LocalesList = new List<string> {"english", "russian"};
+        public static readonly List<string> LocalesList = new List<string> {"english", "russian", "german"};
 
         static LocalizationManager()
         {

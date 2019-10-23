@@ -60,6 +60,7 @@ Name "${APPNAME} (${FILE_ARCHITECTURE})"
 
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "Russian"
+!insertmacro MUI_LANGUAGE "German"
 
 Function .onInit
     !insertmacro MUI_LANGDLL_DISPLAY
